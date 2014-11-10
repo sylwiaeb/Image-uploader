@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title></title>
+    <link rel="stylesheet" href="media/uploader.css" media="screen" title="default" />
+</head>
+<body>
+
+<div id="container">
+
+    <h2>Image Uploader</h2>
+    <section>
+
+        <label class="file-select">
+            Select files to upload
+            <input type="file" id="upload" multiple>
+        </label>
+
+        <small>or</small>
+
+        <div id="drop-zone" draggable="true">
+            Drop files here
+        </div>
+
+    </section>
+
+    <ul id="files-list">
+        <li><span class="msg">No files yet!</span></li>
+    </ul>
+
+</div>
+<script src="uploader.js"></script>
+</body>
+</html>
