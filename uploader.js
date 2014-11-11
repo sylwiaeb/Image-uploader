@@ -9,7 +9,16 @@ var UPLOADER = {};
 
     // settings
     u.settings = {
-        allowedFileTypes: /image.jpg|image.png/
+        allowedFileTypes: {
+            jpg: {
+                mime: 'image/jpg',
+                magic: 'ffd8'
+            },
+            png: {
+                mime: 'image/png',
+                magic: '8950'
+            }
+        }
     };
 
     // cache DOM nodes
@@ -25,13 +34,51 @@ var UPLOADER = {};
             u.helpers.clearFilesList = function () {};
             u.nodes.filesList.innerHTML = '';
         },
-        notSupportedFile: function (file) {
-            alert('I am very limited application and accepting only JPG and PNG files and your files is: ' + file.type);
+        notSupportedFile: function () {
+            alert('Hi there! I\'m very limited application and accept only JPG and PNG files.');
         },
+        // I found this solution to be way faster then using Canvas to generate thumbmail with correct aspect ratio
         clipImage: function (image) {
             var min = Math.min(image.width, image.height);
 
             (min === image.width) ? image.width = 150 : image.height = 150;
+        },
+        // Oh boy - it turned out you can easly fake file type, so the magic numbers are solution here
+        detectImageType: function (buffer) {
+            var dataView,
+                hex,
+                trueFileType;
+
+            try {
+                dataView = new DataView(buffer, 0, 5);
+            } catch (ex) {
+                u.helpers.notSupportedFile();
+                // console.error('Corrupted file.', ex);
+            }
+
+            hex = dataView.getUint8(0, true).toString(16) + dataView.getUint8(1, true).toString(16),
+            trueFileType = 'UNSUPPORTED';
+
+            if (hex === u.settings.allowedFileTypes.jpg.magic) {
+                trueFileType = u.settings.allowedFileTypes.jpg.mime;
+            } else if (hex === u.settings.allowedFileTypes.png.magic) {
+                trueFileType = u.settings.allowedFileTypes.png.mime;
+            }
+
+            return trueFileType;
+
+        },
+        arrayBufferToBase64: function (buffer) {
+            var binary = '',
+                bytes = new Uint8Array(buffer),
+                i,
+                l = bytes.byteLength;
+
+            for (i = 0; i < l; i++) {
+                binary += String.fromCharCode(bytes[i]);
+            }
+
+            return window.btoa(binary);
         }
     };
 
@@ -65,16 +112,10 @@ var UPLOADER = {};
 
             var reader;
 
-            // check if allowed file type
-            if (!file.type.match(u.settings.allowedFileTypes)) {
-                u.helpers.notSupportedFile(file);
-                return;
-            };
-
             reader = new FileReader();
 
             // read file content
-            reader.readAsDataURL(file);
+            reader.readAsArrayBuffer(file);
 
             // listener for file
             reader.onloadend = (function (file) {
@@ -91,12 +132,20 @@ var UPLOADER = {};
 
     // once file is ready to access append it to files list
     u.onFileLoad = function (e, file) {
+        var fileType = u.helpers.detectImageType(e.srcElement.result);
+
+        if (fileType === 'UNSUPPORTED') {
+            u.helpers.notSupportedFile();
+            return;
+        }
+
         var li = w.document.createElement('li'),
-            img = w.document.createElement('img');
+            img = w.document.createElement('img'),
+            src = 'data:' + fileType + ';base64,' + u.helpers.arrayBufferToBase64(e.srcElement.result);
 
         u.helpers.clearFilesList();
 
-        img.src = e.srcElement.result;
+        img.src = src;
         img.alt = file.name;
         img.title = 'Click to see original size';
         img.onload = u.helpers.clipImage(img);
@@ -108,7 +157,7 @@ var UPLOADER = {};
         img.addEventListener('click', function () {
 
             // since this is HTML5 not XHTML (with proper type) we can use write
-            open().document.write('<img src="' + e.srcElement.result + '" alt="' + file.name + '" />');
+            open().document.write('<img src="' + src + '" alt="' + file.name + '" />');
         });
     };
 

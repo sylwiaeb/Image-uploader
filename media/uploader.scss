@@ -134,20 +134,21 @@ body {
         }
     }
 
-    .msg {
-        color: rgb(196, 77, 88);
-    }
-
     li {
         position: relative;
         height: 150px;
         width: 150px;
         padding: 5px;
-        border: 1px solid rgb(51, 51, 51);
+        border: 1px solid rgba(51, 51, 51, 0);
         border-radius: 5px;
         
         &:hover {
             border-color: rgb(78, 205, 196);
+        }
+
+        &.msg {
+            color: rgb(196, 77, 88);
+            border: none;
         }
 
         img {
