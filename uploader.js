@@ -47,17 +47,17 @@ var UPLOADER = {};
         detectImageType: function (buffer) {
             var dataView,
                 hex,
-                trueFileType;
+                trueFileType = 'UNSUPPORTED';
 
             try {
                 dataView = new DataView(buffer, 0, 5);
             } catch (ex) {
                 u.helpers.notSupportedFile();
+                return trueFileType;
                 // console.error('Corrupted file.', ex);
             }
 
-            hex = dataView.getUint8(0, true).toString(16) + dataView.getUint8(1, true).toString(16),
-            trueFileType = 'UNSUPPORTED';
+            hex = dataView.getUint8(0, true).toString(16) + dataView.getUint8(1, true).toString(16);
 
             if (hex === u.settings.allowedFileTypes.jpg.magic) {
                 trueFileType = u.settings.allowedFileTypes.jpg.mime;
@@ -132,7 +132,8 @@ var UPLOADER = {};
 
     // once file is ready to access append it to files list
     u.onFileLoad = function (e, file) {
-        var fileType = u.helpers.detectImageType(e.srcElement.result);
+
+        var fileType = u.helpers.detectImageType(e.target.result);
 
         if (fileType === 'UNSUPPORTED') {
             u.helpers.notSupportedFile();
@@ -141,7 +142,7 @@ var UPLOADER = {};
 
         var li = w.document.createElement('li'),
             img = w.document.createElement('img'),
-            src = 'data:' + fileType + ';base64,' + u.helpers.arrayBufferToBase64(e.srcElement.result);
+            src = 'data:' + fileType + ';base64,' + u.helpers.arrayBufferToBase64(e.target.result);
 
         u.helpers.clearFilesList();
 
